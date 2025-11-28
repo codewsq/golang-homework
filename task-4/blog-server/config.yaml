@@ -1,0 +1,28 @@
+# 服务器配置
+server:
+  port: 8080
+  mode: "debug"  # debug 或 release
+
+# 数据库配置
+database:
+  host: "127.0.0.1"
+  port: 3306
+  username: "root"
+  password: "123456"
+  dbname: "blog_db"
+  charset: "utf8mb4"
+  parse_time: true
+  loc: "Local"
+  max_idle_conns: 10
+  max_open_conns: 100
+  conn_max_lifetime: 3600
+
+# JWT配置
+jwt:
+  secret: "my-blog-secret-key-with-jwt"
+  expiration_hours: 24
+
+# 应用配置
+app:
+  name: "Blog-Server"
+  version: "v1.0.0"
