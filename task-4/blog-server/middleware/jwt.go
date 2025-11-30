@@ -3,9 +3,9 @@ package middleware
 import (
 	"github.com/codewsq/blog/server/config"
 	"github.com/codewsq/blog/server/models"
+	"github.com/codewsq/blog/server/responses"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	"net/http"
 	"time"
 )
 
@@ -45,8 +45,8 @@ func JWTMiddleware() gin.HandlerFunc {
 
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header is required"})
-			c.Abort()
+			responses.Unauthorized(c, "Authorization header is required")
+			c.Abort() // 立即终止当前请求的处理链，阻止后续的中间件和处理函数被执行
 			return
 		}
 
@@ -66,7 +66,7 @@ func JWTMiddleware() gin.HandlerFunc {
 		})
 
 		if err != nil || !token.Valid {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			responses.Unauthorized(c, "Invalid token")
 			c.Abort()
 			return
 		}

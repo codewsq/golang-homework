@@ -13,6 +13,7 @@ type Config struct {
 	Database DatabaseConfig `mapstructure:"database"`
 	JWT      JWTConfig      `mapstructure:"jwt"`
 	App      AppConfig      `mapstructure:"app"`
+	Log      LogConfig      `mapstructure:"log"`
 }
 
 // ServerConfig 服务器配置
@@ -48,14 +49,23 @@ type AppConfig struct {
 	Version string `mapstructure:"version"`
 }
 
+// LogConfig 日志配置
+type LogConfig struct {
+	Level      string `mapstructure:"level"`
+	Format     string `mapstructure:"format"`
+	Output     string `mapstructure:"output"`
+	FilePath   string `mapstructure:"file_path"`
+	MaxSize    int    `mapstructure:"max_size"`
+	MaxBackups int    `mapstructure:"max_backups"`
+	MaxAge     int    `mapstructure:"max_age"`
+}
+
 // GlobalConfig 全局配置实例
 var GlobalConfig *Config
 
 // LoadConfig 加载配置文件
 func LoadConfig(configPath string) error {
-	// 如果未指定配置文件路径，使用默认路径
 	if configPath == "" {
-		// 先检查当前目录
 		if _, err := os.Stat("config.yaml"); err == nil {
 			configPath = "config.yaml"
 		} else if _, err := os.Stat("config/config.yaml"); err == nil {
@@ -68,14 +78,12 @@ func LoadConfig(configPath string) error {
 	viper.SetConfigFile(configPath)
 	viper.SetConfigType("yaml")
 
-	// 读取环境变量覆盖配置
 	viper.AutomaticEnv()
 
 	if err := viper.ReadInConfig(); err != nil {
 		return err
 	}
 
-	// 解析配置到结构体
 	if err := viper.Unmarshal(&GlobalConfig); err != nil {
 		return err
 	}

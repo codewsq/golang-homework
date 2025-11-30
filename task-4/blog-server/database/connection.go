@@ -2,27 +2,34 @@ package database
 
 import (
 	"github.com/codewsq/blog/server/config"
+	mylogger "github.com/codewsq/blog/server/logger"
 	"github.com/codewsq/blog/server/models"
+	"github.com/sirupsen/logrus"
+	"time"
+
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-	"log"
-	"time"
 )
 
 var DB *gorm.DB
 
 // ConnectDB 连接数据库
 func ConnectDB() error {
-	// 获取全局配置实例对象
 	cfg := config.GetConfig()
 	if cfg == nil {
-		log.Fatal("Config not loaded")
+		mylogger.Fatal("Config not loaded")
 	}
-	// 获取数据库连接字符串
+
 	dsn := cfg.Database.GetDSN()
 
-	// 配置GORM日志级别
+	// 记录连接信息（不包含密码）
+	mylogger.WithFields(logrus.Fields{
+		"host":   cfg.Database.Host,
+		"port":   cfg.Database.Port,
+		"dbname": cfg.Database.DBName,
+	}).Info("Connecting to database")
+
 	var gormLogger logger.Interface
 	if cfg.Server.Mode == "debug" {
 		gormLogger = logger.Default.LogMode(logger.Info)
@@ -34,12 +41,17 @@ func ConnectDB() error {
 		Logger: gormLogger,
 	})
 	if err != nil {
+		mylogger.WithFields(logrus.Fields{
+			"error": err.Error(),
+			"dsn":   dsn, // 生产环境不要记录完整DSN
+		}).Error("Failed to connect to database")
 		return err
 	}
 
 	// 配置连接池
 	sqlDB, err := db.DB()
 	if err != nil {
+		mylogger.Errorf("Failed to get database instance: %v", err)
 		return err
 	}
 
@@ -48,13 +60,15 @@ func ConnectDB() error {
 	sqlDB.SetConnMaxLifetime(time.Duration(cfg.Database.ConnMaxLifetime) * time.Second)
 
 	// 自动迁移表结构
-	err = db.AutoMigrate(&models.User{}, &models.Post{}, &models.Comment{})
+	mylogger.Info("Starting database migration")
+	err = db.AutoMigrate(&models.User{}, &models.Post{})
 	if err != nil {
+		mylogger.Errorf("Failed to migrate database: %v", err)
 		return err
 	}
 
 	DB = db
-	log.Println("Database connected successfully")
+	mylogger.Info("Database connected successfully")
 	return nil
 }
 

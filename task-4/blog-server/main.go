@@ -4,19 +4,31 @@ import (
 	"github.com/codewsq/blog/server/api"
 	"github.com/codewsq/blog/server/config"
 	"github.com/codewsq/blog/server/database"
+	"github.com/codewsq/blog/server/logger"
 	"github.com/codewsq/blog/server/middleware"
-	"log"
-
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 func main() {
 	// 加载配置文件
 	if err := config.LoadConfig(""); err != nil {
-		log.Fatalf("Failed to load config: %v", err)
+		panic(err)
 	}
 
 	cfg := config.GetConfig()
+
+	// 初始化日志
+	if err := logger.InitLogger(); err != nil {
+		panic(err)
+	}
+
+	logger.Info("Application starting...")
+	logger.WithFields(logrus.Fields{
+		"app":     cfg.App.Name,
+		"version": cfg.App.Version,
+		"mode":    cfg.Server.Mode,
+	}).Info("Application configuration loaded")
 
 	// 设置Gin运行模式
 	if cfg.Server.Mode == "release" {
@@ -25,15 +37,16 @@ func main() {
 
 	// 初始化数据库连接
 	if err := database.ConnectDB(); err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+		logger.Fatalf("Failed to connect to database: %v", err)
 	}
 
 	// 创建Gin路由
 	router := gin.Default()
 
-	// 添加基础中间件
-	router.Use(gin.Logger())
-	router.Use(gin.Recovery())
+	// 添加中间件
+	router.Use(middleware.RecoveryMiddleware()) // 恢复中间件
+	router.Use(middleware.ErrorHandler())       // 错误处理中间件
+	router.Use(gin.Logger())                    // Gin默认日志
 
 	// 初始化控制器
 	authApi := &api.AuthApi{}
@@ -42,6 +55,7 @@ func main() {
 
 	// 健康检查路由
 	router.GET("/health", func(c *gin.Context) {
+		logger.Debug("Health check requested")
 		c.JSON(200, gin.H{
 			"status":  "ok",
 			"app":     cfg.App.Name,
@@ -79,10 +93,10 @@ func main() {
 
 	// 启动服务器
 	port := ":" + cfg.Server.Port
-	log.Printf("%s %s starting on port %s", cfg.App.Name, cfg.App.Version, cfg.Server.Port)
-	log.Printf("Server running on http://localhost%s", port)
+	logger.Infof("%s %s starting on port %s", cfg.App.Name, cfg.App.Version, cfg.Server.Port)
+	logger.Infof("Server running on http://localhost%s", port)
 
 	if err := router.Run(port); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
+		logger.Fatalf("Failed to start server: %v", err)
 	}
 }

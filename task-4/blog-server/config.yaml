@@ -26,3 +26,13 @@ jwt:
 app:
   name: "Blog-Server"
   version: "v1.0.0"
+
+# 日志配置
+log:
+  level: "info"  # debug, info, warn, error, fatal, panic
+  format: "json" # json 或 text
+  output: "file" # console 或 file
+  file_path: "./logs/app.log"
+  max_size: 100   # MB
+  max_backups: 10
+  max_age: 30     # days
