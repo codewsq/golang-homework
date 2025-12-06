@@ -66,10 +66,15 @@ var GlobalConfig *Config
 // LoadConfig 加载配置文件
 func LoadConfig(configPath string) error {
 	if configPath == "" {
-		if _, err := os.Stat("config.yaml"); err == nil {
+		// 检查命令行参数
+		if len(os.Args) > 1 && os.Args[1] == "--config" && len(os.Args) > 2 {
+			configPath = os.Args[2]
+		} else if _, err := os.Stat("config.yaml"); err == nil {
 			configPath = "config.yaml"
 		} else if _, err := os.Stat("config/config.yaml"); err == nil {
 			configPath = "config/config.yaml"
+		} else if _, err := os.Stat("blog-server/config.yaml"); err == nil {
+			configPath = "blog-server/config.yaml"
 		} else {
 			log.Fatal("Config file not found")
 		}
