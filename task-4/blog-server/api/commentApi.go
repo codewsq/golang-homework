@@ -42,12 +42,16 @@ func (api *CommentApi) GetComment(c *gin.Context) {
 	postId, err := strconv.Atoi(c.Param("postId"))
 	if err != nil {
 		responses.BadRequest(c, "Invalid post ID")
+		return
 	}
-	var comment models.Comment
-	if err := database.GetDB().Preload("Post.User").Where(&models.Comment{PostID: uint(postId)}).
-		Find(&comment).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Comment not found"})
-		responses.Error(c, http.StatusBadRequest, "Comment not found")
+	var comments []models.Comment
+	if err := database.GetDB().
+		Preload("User").
+		Where("post_id = ?", uint(postId)).
+		Order("created_at ASC").
+		Find(&comments).Error; err != nil {
+		responses.Error(c, http.StatusBadRequest, "failed to retrieve comments")
+		return
 	}
-	responses.Success(c, "comment successfully retrieved", comment)
+	responses.Success(c, "comments successfully retrieved", comments)
 }
