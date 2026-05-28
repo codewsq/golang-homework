@@ -245,6 +245,22 @@ npm run preview
 
 ---
 
+## 编辑器 / IDE 配置（消除 .vue 红色波浪线）
+
+若在 `.vue` 模板里看到「找不到名称 `handleSubmit`」等报错，但 `npm run build` 正常，**不是业务代码错误**，而是编辑器未启用 Vue 的 TypeScript 支持。
+
+1. 安装扩展：**Vue - Official**（扩展 ID：`Vue.volar`），并禁用旧版 **Vetur**。
+2. 命令面板执行 **「TypeScript: Select TypeScript Version」** → 选择 **Use Workspace Version**。
+3. 重新加载窗口（**Developer: Reload Window**）。
+
+项目已包含：
+
+- `src/vite-env.d.ts`：Vite 与 `.vue` 模块类型声明  
+- `tsconfig.app.json` 中的 `@vue/typescript-plugin`：让 TS 识别 `<script setup>` 暴露给模板的变量  
+- `.vscode/settings.json`：使用工作区 TypeScript 与 Volar 混合模式  
+
+---
+
 ## 常见问题
 
 **Q：开发时接口 404 或跨域？**  

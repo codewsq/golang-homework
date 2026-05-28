@@ -7,6 +7,12 @@
     "paths": {
       "@/*": ["src/*"]
     },
+    "plugins": [
+      {
+        "name": "@vue/typescript-plugin",
+        "include": ["src/**/*.vue"]
+      }
+    ],
 
     /* Linting */
     "noUnusedLocals": true,
